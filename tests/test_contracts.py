@@ -27,6 +27,17 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn('never provisions or moves them', tenant_template)
         self.assertNotIn('Microsoft.Subscription/aliases', tenant_template)
 
+    def test_single_management_hierarchy_has_distinct_dev_and_prod_boundaries(self) -> None:
+        tenant_template = self.read('infra/tenant/main.bicep')
+        self.assertIn('developmentWorkloadManagementGroupName', tenant_template)
+        self.assertIn('productionWorkloadManagementGroupName', tenant_template)
+        self.assertEqual(2, tenant_template.count('id: workloadManagementGroup.id'))
+        for environment in ('dev', 'prod'):
+            parameters = self.read(f'infra/params/{environment}/tenant.bicepparam')
+            self.assertIn("param rootManagementGroupName = 'reference-root'", parameters)
+            self.assertIn("param developmentWorkloadManagementGroupName = 'reference-workloads-dev'", parameters)
+            self.assertIn("param productionWorkloadManagementGroupName = 'reference-workloads-prod'", parameters)
+
     def test_dev_and_prod_policy_effects_are_intentionally_distinct(self) -> None:
         self.assertIn("param policyEffect = 'Audit'", self.read('infra/params/dev/management-group.bicepparam'))
         self.assertIn("param policyEffect = 'Deny'", self.read('infra/params/prod/management-group.bicepparam'))
@@ -37,6 +48,35 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("field: '[concat(\\'tags[\\', parameters(\\'tagName\\'), \\']\\')]'", policy_template)
         self.assertIn("field: 'location'", policy_template)
         self.assertIn('public-network and diagnostic policies require separate alias validation', policy_template)
+
+    def test_frozen_tag_contract_is_assigned_to_taggable_resources(self) -> None:
+        policy_template = self.read('infra/management-group/main.bicep')
+        subscription_template = self.read('infra/subscription/main.bicep')
+        self.assertIn("mode: 'Indexed'", policy_template)
+        self.assertIn('for tagName in requiredTagNames', policy_template)
+        for environment in ('dev', 'prod'):
+            parameters = self.read(f'infra/params/{environment}/management-group.bicepparam')
+            for tag in ('environment', 'owner', 'costCenter', 'dataClassification'):
+                self.assertIn(f"'{tag}'", parameters)
+        self.assertNotIn('configured-by-parameter-file', subscription_template)
+        for tag_parameter in ('environmentName', 'ownerTagValue', 'costCenterTagValue', 'dataClassificationTagValue'):
+            self.assertIn(f'{tag_parameter} string', subscription_template)
+
+    def test_network_parameters_represent_hub_and_distinct_dev_prod_spokes(self) -> None:
+        template = self.read('infra/resource-group/main.bicep')
+        platform_parameters = self.read('infra/params/platform/resource-group.bicepparam')
+        dev_parameters = self.read('infra/params/dev/resource-group.bicepparam')
+        prod_parameters = self.read('infra/params/prod/resource-group.bicepparam')
+        self.assertIn("'Hub'", template)
+        self.assertIn("'DevSpoke'", template)
+        self.assertIn("'ProdSpoke'", template)
+        self.assertIn("param networkRole = 'Hub'", platform_parameters)
+        self.assertIn("param networkRole = 'DevSpoke'", dev_parameters)
+        self.assertIn("param networkRole = 'ProdSpoke'", prod_parameters)
+        self.assertIn("'10.10.0.0/16'", dev_parameters)
+        self.assertIn("'10.20.0.0/16'", prod_parameters)
+        for parameters in (platform_parameters, dev_parameters, prod_parameters):
+            self.assertIn("'privatelink.blob.core.windows.net'", parameters)
 
     def test_parameter_examples_are_placeholders_not_real_identifiers(self) -> None:
         parameter_text = '\n'.join(path.read_text(encoding='utf-8') for path in (INFRA / 'params').rglob('*.bicepparam'))

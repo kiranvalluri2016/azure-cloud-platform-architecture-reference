@@ -7,9 +7,10 @@
 | Policy effect | `Audit` | `Deny` |
 | Subscription label | Existing DEV boundary placeholder | Existing PROD boundary placeholder |
 | Budget value | Lower illustrative amount | Higher illustrative amount |
-| Network role fixture | Hub | Spoke |
+| Network role fixture | DEV spoke `10.10.0.0/16` | PROD spoke `10.20.0.0/16` |
+| Tags | `development`, `platform-engineering`, `reference-dev`, `internal` | `production`, `platform-engineering`, `reference-prod`, `confidential` |
 
-DEV and PROD parameter files deliberately differ in policy effect and boundary labels. They do not identify a real tenant or subscription.
+The platform parameter fixture separately represents the hub at `10.0.0.0/16` and the Azure Blob Storage Private Link DNS example `privatelink.blob.core.windows.net`. DEV and PROD parameter files deliberately differ in policy effect, tag values, and boundary labels. They do not identify a real tenant or subscription.
 
 ## Local validation procedure
 

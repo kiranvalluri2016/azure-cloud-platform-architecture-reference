@@ -1,7 +1,12 @@
 using '../../management-group/main.bicep'
 
 param policyEffect = 'Deny'
-param ownerTagName = 'owner'
+param requiredTagNames = [
+  'environment'
+  'owner'
+  'costCenter'
+  'dataClassification'
+]
 param allowedLocations = [
   'eastus'
   'centralus'

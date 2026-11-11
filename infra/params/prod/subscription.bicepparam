@@ -5,3 +5,7 @@ param workloadResourceGroupName = 'rg-reference-workload-prod'
 param deploymentRegion = 'eastus'
 param monthlyBudgetAmount = 500
 param budgetNotificationEmail = 'finops-prod@example.invalid'
+param environmentName = 'production'
+param ownerTagValue = 'platform-engineering'
+param costCenterTagValue = 'reference-prod'
+param dataClassificationTagValue = 'confidential'

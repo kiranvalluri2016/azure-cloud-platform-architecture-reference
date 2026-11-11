@@ -2,6 +2,8 @@ targetScope = 'resourceGroup'
 
 param virtualNetworkName string
 param location string
+param addressPrefix string
+param subnetAddressPrefix string
 
 resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: virtualNetworkName
@@ -9,14 +11,14 @@ resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.1.0.0/16'
+        addressPrefix
       ]
     }
     subnets: [
       {
         name: 'workload'
         properties: {
-          addressPrefix: '10.1.1.0/24'
+          addressPrefix: subnetAddressPrefix
         }
       }
     ]

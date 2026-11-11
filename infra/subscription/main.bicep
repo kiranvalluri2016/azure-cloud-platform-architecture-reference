@@ -16,13 +16,26 @@ param monthlyBudgetAmount int
 @description('Example non-production contact address for budget notifications.')
 param budgetNotificationEmail string
 
+@description('Environment tag value, for example development or production.')
+param environmentName string
+
+@description('Accountable ownership tag value.')
+param ownerTagValue string
+
+@description('Cost allocation tag value.')
+param costCenterTagValue string
+
+@description('Data-handling tag value.')
+param dataClassificationTagValue string
+
 resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: workloadResourceGroupName
   location: deploymentRegion
   tags: {
-    environment: 'configured-by-parameter-file'
-    owner: 'configured-by-parameter-file'
-    costCenter: 'configured-by-parameter-file'
+    environment: environmentName
+    owner: ownerTagValue
+    costCenter: costCenterTagValue
+    dataClassification: dataClassificationTagValue
   }
 }
 

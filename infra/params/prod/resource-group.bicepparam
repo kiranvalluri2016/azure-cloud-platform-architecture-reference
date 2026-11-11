@@ -1,8 +1,10 @@
 using '../../resource-group/main.bicep'
 
-param topologyRole = 'Spoke'
-param hubVirtualNetworkName = 'vnet-reference-hub-prod'
-param spokeVirtualNetworkName = 'vnet-reference-spoke-prod'
+param networkRole = 'ProdSpoke'
+param virtualNetworkName = 'vnet-reference-spoke-prod'
+param virtualNetworkAddressPrefix = '10.20.0.0/16'
+param subnetAddressPrefix = '10.20.1.0/24'
 param deploymentRegion = 'eastus'
 param readerPrincipalObjectId = 'placeholder-principal-object-id'
 param logAnalyticsWorkspaceResourceId = 'placeholder-log-analytics-workspace-resource-id'
+param privateLinkDnsZoneName = 'privatelink.blob.core.windows.net'

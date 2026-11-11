@@ -2,6 +2,8 @@ targetScope = 'resourceGroup'
 
 param virtualNetworkName string
 param location string
+param addressPrefix string
+param subnetAddressPrefix string
 
 resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: virtualNetworkName
@@ -9,14 +11,14 @@ resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.0.0.0/16'
+        addressPrefix
       ]
     }
     subnets: [
       {
         name: 'shared-services'
         properties: {
-          addressPrefix: '10.0.1.0/24'
+          addressPrefix: subnetAddressPrefix
         }
       }
       {

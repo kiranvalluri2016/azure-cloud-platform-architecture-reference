@@ -15,12 +15,12 @@ The example role assignment uses the built-in Reader role definition to illustra
 
 ## Policy-as-code contract
 
-The policy entry point contains only two portable custom policies:
+The policy entry point contains two portable custom-policy definitions:
 
-1. Required ownership tag using a `tags[...]` alias.
+1. Required governance tag using a `tags[...]` alias, assigned once for each frozen key: `environment`, `owner`, `costCenter`, and `dataClassification`.
 2. Allowed regions using the `location` alias.
 
-Both definitions permit only `Audit` or `Deny`. DEV parameter files set `Audit` to expose policy impact; PROD parameter files set `Deny` to enforce an approved baseline. The policy assignments are Bicep artifacts, not evidence of an active Azure assignment.
+The tag policy uses Azure Policy `Indexed` mode so it evaluates resources that support tags, rather than treating non-taggable resources as failures. Both definitions permit only `Audit` or `Deny`. DEV parameter files set `Audit` to expose policy impact; PROD parameter files set `Deny` to enforce an approved baseline. The policy assignments are Bicep artifacts, not evidence of an active Azure assignment.
 
 No generic policy in this project claims to disable public network access for every Azure resource. Such settings use different aliases and semantics across providers. Similarly, no universal diagnostics policy is claimed because diagnostic categories are provider-specific.
 
@@ -31,6 +31,7 @@ The baseline establishes these required governance concepts:
 - `environment` for DEV/PROD attribution.
 - `owner` for accountable operational ownership.
 - `costCenter` for cost allocation.
+- `dataClassification` for data-handling accountability.
 - Subscription-level monthly budget and forecast threshold.
 
 The budget module uses an `example.invalid` email in parameter examples. A real notification recipient is operational configuration, not repository source.

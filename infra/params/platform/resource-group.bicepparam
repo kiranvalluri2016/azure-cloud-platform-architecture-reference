@@ -1,0 +1,10 @@
+using '../../resource-group/main.bicep'
+
+param networkRole = 'Hub'
+param virtualNetworkName = 'vnet-reference-hub'
+param virtualNetworkAddressPrefix = '10.0.0.0/16'
+param subnetAddressPrefix = '10.0.1.0/24'
+param deploymentRegion = 'eastus'
+param readerPrincipalObjectId = 'placeholder-principal-object-id'
+param logAnalyticsWorkspaceResourceId = 'placeholder-log-analytics-workspace-resource-id'
+param privateLinkDnsZoneName = 'privatelink.blob.core.windows.net'

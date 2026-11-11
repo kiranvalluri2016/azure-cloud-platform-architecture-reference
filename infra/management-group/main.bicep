@@ -7,8 +7,8 @@ targetScope = 'managementGroup'
 @description('DEV uses Audit; PROD uses Deny. This is an assignment effect, not a deployment action.')
 param policyEffect string
 
-@description('Required resource-owner tag name.')
-param ownerTagName string
+@description('Required governance tag names. The Indexed policy mode evaluates taggable resources only.')
+param requiredTagNames array
 
 @description('Allowed Azure regions for workload resources.')
 param allowedLocations array
@@ -17,9 +17,9 @@ resource requiredTagsPolicy 'Microsoft.Authorization/policyDefinitions@2023-04-0
   name: 'require-resource-owner-tag'
   properties: {
     policyType: 'Custom'
-    mode: 'All'
-    displayName: 'Require a resource owner tag'
-    description: 'Requires the configured ownership tag on resources that support tags.'
+    mode: 'Indexed'
+    displayName: 'Require a governance tag on taggable resources'
+    description: 'Requires one configured governance tag on resources evaluated by Indexed policy mode.'
     parameters: {
       tagName: {
         type: 'String'
@@ -95,22 +95,22 @@ resource allowedLocationsPolicy 'Microsoft.Authorization/policyDefinitions@2023-
   }
 }
 
-resource requiredTagsAssignment 'Microsoft.Authorization/policyAssignments@2024-04-01' = {
-  name: 'require-resource-owner-tag'
+resource requiredTagAssignments 'Microsoft.Authorization/policyAssignments@2024-04-01' = [for tagName in requiredTagNames: {
+  name: 'require-${tagName}-tag'
   properties: {
-    displayName: 'Require resource ownership tag'
+    displayName: 'Require ${tagName} tag'
     policyDefinitionId: requiredTagsPolicy.id
     enforcementMode: 'Default'
     parameters: {
       tagName: {
-        value: ownerTagName
+        value: tagName
       }
       effect: {
         value: policyEffect
       }
     }
   }
-}
+}]
 
 resource allowedLocationsAssignment 'Microsoft.Authorization/policyAssignments@2024-04-01' = {
   name: 'allow-approved-regions'
@@ -130,4 +130,5 @@ resource allowedLocationsAssignment 'Microsoft.Authorization/policyAssignments@2
 }
 
 output configuredEffect string = policyEffect
+output requiredTags array = requiredTagNames
 output policyBoundary string = 'Only generic tag and location aliases are asserted by this reference. Provider-specific public-network and diagnostic policies require separate alias validation.'

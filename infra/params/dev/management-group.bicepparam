@@ -1,7 +1,12 @@
 using '../../management-group/main.bicep'
 
 param policyEffect = 'Audit'
-param ownerTagName = 'owner'
+param requiredTagNames = [
+  'environment'
+  'owner'
+  'costCenter'
+  'dataClassification'
+]
 param allowedLocations = [
   'eastus'
   'centralus'

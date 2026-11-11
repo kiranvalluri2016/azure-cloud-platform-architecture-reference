@@ -7,8 +7,8 @@ It is an architecture reference project, not a production deployment.
 ## What is implemented
 
 - Tenant, management-group, subscription, and resource-group Bicep entry points with explicit scope boundaries.
-- A landing-zone management-group hierarchy that deliberately does **not** create or move subscriptions.
-- Custom Azure Policy examples for required ownership tags and approved regions.
+- A single landing-zone hierarchy with separate DEV and PROD workload management-group boundaries that deliberately does **not** create or move subscriptions.
+- Custom Azure Policy examples for `environment`, `owner`, `costCenter`, `dataClassification`, and approved regions.
 - Distinct environment contracts: DEV assigns `Audit`; PROD assigns `Deny`.
 - Least-privilege Reader role-assignment and user-assigned managed-identity patterns using placeholders only.
 - Bounded hub/spoke virtual-network and private-DNS modules.
@@ -23,15 +23,17 @@ flowchart TB
   Tenant[Azure tenant scope] --> Root[Root management group]
   Root --> Platform[Platform management group]
   Root --> Workloads[Workload management group]
+  Workloads --> DevMG[DEV workload management group]
+  Workloads --> ProdMG[PROD workload management group]
   Platform --> PlatformSub[Existing platform subscription]
-  Workloads --> DevSub[Existing DEV subscription]
-  Workloads --> ProdSub[Existing PROD subscription]
+  DevMG --> DevSub[Existing DEV subscription]
+  ProdMG --> ProdSub[Existing PROD subscription]
 
   PlatformSub --> Hub[Hub network and shared services]
   DevSub --> DevRG[DEV workload resource group]
   ProdSub --> ProdRG[PROD workload resource group]
-  Hub -. private DNS and controlled egress .-> DevRG
-  Hub -. private DNS and controlled egress .-> ProdRG
+  Hub -. Azure Blob Private Link DNS contract .-> DevRG
+  Hub -. Azure Blob Private Link DNS contract .-> ProdRG
 
   Policy[Tag and region policy assignments] --> Platform
   Policy --> Workloads
@@ -104,7 +106,7 @@ Local validation is **not Azure deployment validation**, RBAC verification, Azur
 
 | Scope | Entry point | Responsibility | Explicit boundary |
 |---|---|---|---|
-| Tenant | `infra/tenant/main.bicep` | Management-group hierarchy | Does not create or move subscriptions |
+| Tenant | `infra/tenant/main.bicep` | One hierarchy: root, platform, workload, DEV workload, PROD workload groups | Does not create or move subscriptions |
 | Management group | `infra/management-group/main.bicep` | Custom tag/region policies and assignments | No universal PaaS public-network policy claim |
 | Subscription | `infra/subscription/main.bicep` | Workload resource-group and budget baseline | Targets an existing subscription selected by operator |
 | Resource group | `infra/resource-group/main.bicep` | Hub/spoke module selection, identity/RBAC patterns, diagnostic contract | No provider-specific diagnostic deployment without validated categories |
@@ -123,7 +125,7 @@ This project describes the Azure platform foundation only. It does not deploy ap
 
 - No Azure deployment, authentication, subscription validation, or resource provisioning has occurred.
 - Policy aliases are intentionally limited to generic tag and location controls. Service-specific public-network and diagnostic policies must be validated against the target resource provider.
-- Hub/spoke peering, firewall policy, DNS links, private endpoints, and diagnostic categories are documented architecture contracts; they are not proven by local compilation.
+- Hub/spoke peering, firewall policy, DNS links, private endpoints, and diagnostic categories are documented architecture contracts; they are not proven by local compilation. The Private Link DNS example is Azure Blob Storage only.
 - Budget notifications use non-routable example addresses and must be replaced only through approved operational configuration.
 - No GitHub Actions workflow is included. Verification is designed to run locally or in a controlled environment.
 

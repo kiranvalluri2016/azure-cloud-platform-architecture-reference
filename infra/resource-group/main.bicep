@@ -2,16 +2,20 @@ targetScope = 'resourceGroup'
 
 @allowed([
   'Hub'
-  'Spoke'
+  'DevSpoke'
+  'ProdSpoke'
 ])
-@description('Determines which bounded network module is selected.')
-param topologyRole string
+@description('Selects the platform hub, DEV spoke, or PROD spoke configuration.')
+param networkRole string
 
-@description('Name for the hub virtual network when topologyRole is Hub.')
-param hubVirtualNetworkName string
+@description('Name for the selected virtual network.')
+param virtualNetworkName string
 
-@description('Name for the spoke virtual network when topologyRole is Spoke.')
-param spokeVirtualNetworkName string
+@description('Address space for the selected virtual network.')
+param virtualNetworkAddressPrefix string
+
+@description('Workload or shared-services subnet prefix for the selected virtual network.')
+param subnetAddressPrefix string
 
 @description('Azure region for the selected virtual network.')
 param deploymentRegion string
@@ -22,26 +26,33 @@ param readerPrincipalObjectId string
 @description('Workspace resource ID contract for a future provider-specific diagnostic setting.')
 param logAnalyticsWorkspaceResourceId string
 
-module hubNetwork '../modules/network/hub-vnet.bicep' = if (topologyRole == 'Hub') {
+@description('Service-specific Private Link DNS zone reference; the hub owns the zone.')
+param privateLinkDnsZoneName string
+
+module hubNetwork '../modules/network/hub-vnet.bicep' = if (networkRole == 'Hub') {
   name: 'hub-network'
   params: {
-    virtualNetworkName: hubVirtualNetworkName
+    virtualNetworkName: virtualNetworkName
     location: deploymentRegion
+    addressPrefix: virtualNetworkAddressPrefix
+    subnetAddressPrefix: subnetAddressPrefix
   }
 }
 
-module spokeNetwork '../modules/network/spoke-vnet.bicep' = if (topologyRole == 'Spoke') {
+module spokeNetwork '../modules/network/spoke-vnet.bicep' = if (networkRole == 'DevSpoke' || networkRole == 'ProdSpoke') {
   name: 'spoke-network'
   params: {
-    virtualNetworkName: spokeVirtualNetworkName
+    virtualNetworkName: virtualNetworkName
     location: deploymentRegion
+    addressPrefix: virtualNetworkAddressPrefix
+    subnetAddressPrefix: subnetAddressPrefix
   }
 }
 
-module privateDns '../modules/network/private-dns.bicep' = {
+module privateDns '../modules/network/private-dns.bicep' = if (networkRole == 'Hub') {
   name: 'private-dns-contract'
   params: {
-    privateDnsZoneName: 'privatelink.${environment().suffixes.storage}'
+    privateDnsZoneName: privateLinkDnsZoneName
   }
 }
 
@@ -68,5 +79,6 @@ module diagnosticContract '../modules/operations/diagnostic-setting-contract.bic
   }
 }
 
-output networkRole string = topologyRole
+output configuredNetworkRole string = networkRole
+output privateLinkDnsZone string = privateLinkDnsZoneName
 output diagnosticBoundary string = diagnosticContract.outputs.validationBoundary
