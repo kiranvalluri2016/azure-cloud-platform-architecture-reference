@@ -1,0 +1,9 @@
+.local/
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.db
+*.sqlite
+.DS_Store
+*.bicep.json
